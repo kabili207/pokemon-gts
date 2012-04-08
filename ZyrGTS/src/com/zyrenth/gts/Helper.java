@@ -5,8 +5,11 @@ import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.codec.binary.Base64;
 
+
 public class Helper
 {
+	public enum Generation { III, IV, V };
+	
 	public static String sha1(String data) throws Exception
 	{
 		return sha1(data.getBytes());

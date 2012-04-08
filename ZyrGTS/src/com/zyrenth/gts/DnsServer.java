@@ -30,49 +30,62 @@ public class DnsServer implements Runnable
 		System.out.println("Starting DNS Server");
 		try
 		{
-			DatagramSocket dnsSock;
+			//DatagramSocket dnsSock;
 			InetAddress googleDns = InetAddress.getByName("8.8.8.8");
 			InetAddress localAddr = null;
 			
 			Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
-	        for (NetworkInterface netint : Collections.list(nets))
-	        {
-	        	Enumeration<InetAddress> inetAddresses = netint.getInetAddresses();
-	            for (InetAddress inetAddress : Collections.list(inetAddresses)) {
-	            	if(!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address)
-	            		localAddr = inetAddress;
-	            }
-	        }
-	        
+			for (NetworkInterface netint : Collections.list(nets))
+			{
+				Enumeration<InetAddress> inetAddresses = netint.getInetAddresses();
+				for (InetAddress inetAddress : Collections.list(inetAddresses)) {
+					if(!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address)
+						localAddr = inetAddress;
+				}
+			}
+
+			
 			DatagramSocket listener = new DatagramSocket(port);
 			listener.setReuseAddress(true);
-
-			System.out.println(localAddr);
+			
+			// TODO: Send event on DNS start
+			System.out.println("DNS Listening on: " + localAddr.getHostAddress());
+			
 			while ((i++ < maxConnections) || (maxConnections == 0))
 			{
 				byte[] buffer = new byte[512];
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-
+				
 				
 				byte[] buffer2 = new byte[512];
 				DatagramPacket packet2 = new DatagramPacket(buffer2, buffer2.length);
 				
 				listener.receive(packet);
 				
-				System.out.println(packet.getAddress().getHostAddress());
+				//System.out.println(packet.getAddress().getHostAddress());
 				byte[] r = packet.getData();
-
+				
 				
 				DatagramSocket datagramSocket = new DatagramSocket();
 				DatagramPacket realDns = new DatagramPacket(r, r.length, googleDns, port);
-
+				
 				datagramSocket.send(realDns);
 				datagramSocket.receive(packet2);
 				
 				byte[] rr = Arrays.copyOfRange(buffer2, 0, packet2.getLength());
 				
 				String resp = new String(rr);
-				if(resp.contains("gamestats2")){
+
+				if(resp.contains("pkvldtprod"))
+				{
+					// Requested domain is https://pkvldtprod.nintendo.co.jp/
+					// DS is attempting to verifying the validity of a pokemon.
+					// TODO: Send an event
+				}
+				
+				if(resp.contains("gamestats2"))
+				{
+					
 					byte[] addrByte = localAddr.getAddress();
 					//byte[] addrByte = InetAddress.getByName("192.168.1.50").getAddress();
 					rr[rr.length -4] = addrByte[0];
@@ -80,21 +93,12 @@ public class DnsServer implements Runnable
 					rr[rr.length -2] = addrByte[2];
 					rr[rr.length -1] = addrByte[3];
 				}
+				
 				DatagramPacket response = new DatagramPacket(rr, rr.length, packet.getAddress(), packet.getPort());
 				listener.send(response);
-
-				//System.out.println("In: " + new String(Arrays.copyOfRange(r, 0, r.length)));
-				//System.out.println("In2: " + Arrays.toString(r));
-				//System.out.println("Out: " + new String(Arrays.copyOfRange(rr, 0, rr.length)));
-				//System.out.println("Out: " + Arrays.toString(rr));
-		        
-				//doComms connection;
 				
-				//server = listener.accept();
-				//doComms conn_c = new doComms(server);
-				//Thread t = new Thread(conn_c);
-				//t.start();
 			}
+			// TODO: Send event on DNS stop
 			System.out.println("Stopping DNS");
 		}
 		catch (IOException ioe)

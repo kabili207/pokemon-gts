@@ -6,6 +6,8 @@ import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.binary.Base64;
 
 import com.zyrenth.gts.DnsServer;
+import com.zyrenth.gts.WebEventListener;
+import com.zyrenth.gts.PokemonReceivedEvent;
 import com.zyrenth.gts.Response;
 import com.zyrenth.gts.WebServer;
 
@@ -20,6 +22,14 @@ public class Main
 		dnsThread.start();
 		
 		WebServer server = new WebServer();
+		server.addEventListener(new WebEventListener(){
+			@Override
+			public void onPokemonReceived(PokemonReceivedEvent e)
+			{
+				// TODO Auto-generated method stub
+				System.out.println(e.getPid() + " sent " + e.getPokemon().getOTName());
+			}
+		});
 		server.run();
 	}
 

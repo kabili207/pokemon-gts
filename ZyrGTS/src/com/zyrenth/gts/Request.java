@@ -3,6 +3,8 @@ package com.zyrenth.gts;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zyrenth.gts.Helper.Generation;
+
 public class Request
 {
 	private boolean valid;
@@ -15,6 +17,7 @@ public class Request
 
 	private String action;
 	private Map<String, String> variables;
+	private Generation generation;
 		
 	public Request(String data)
 	{
@@ -27,6 +30,8 @@ public class Request
 		if(data.contains("/syachi2ds/web/"))
 		{
 			// Black and White - Gen V
+			this.generation = Helper.Generation.V;
+			
 			this.request = data.substring(data.indexOf("/syachi2ds/web/") + 15,
 					data.indexOf("HTTP/1.1") - 1);
 			
@@ -72,6 +77,11 @@ public class Request
 	public String getAction()
 	{
 		return action;
+	}
+
+	public Generation getGeneration()
+	{
+		return generation;
 	}
 	
 }
