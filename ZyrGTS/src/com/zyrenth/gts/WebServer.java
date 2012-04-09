@@ -1,25 +1,28 @@
 package com.zyrenth.gts;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 
 public class WebServer implements Runnable
 {
 	private static int port = 80, maxConnections = 0;
+	private LinkedList<Pokemon> queuePokemon = new LinkedList<Pokemon>();
 	
 	public WebServer()
 	{
@@ -32,16 +35,22 @@ public class WebServer implements Runnable
 		int i = 0;
 		
 		System.out.println("Starting Web Server");
+		fireStatusChangedtEvent(ServerStatusEvent.Status.Starting);
 		try
 		{
-			// dnsServer = new DnsServer();
-			// dnsThread = new Thread(dnsServer);
-			// dnsThread.start();
+			File f = new File("/tmp/Tympole.pkm");
+			byte[] b = getBytesFromFile(f);
+			queuePokemon.add(new Pokemon(b));
+			
+			f = new File("/tmp/Saanaito.pkm");
+			b = getBytesFromFile(f);
+			queuePokemon.add(new Pokemon(b));
 			
 			ServerSocket listener = new ServerSocket(port);
 			Socket server;
 			
 			// TODO: Send an event on web start
+			fireStatusChangedtEvent(ServerStatusEvent.Status.Started);
 			
 			while ((i++ < maxConnections) || (maxConnections == 0))
 			{				
@@ -62,6 +71,37 @@ public class WebServer implements Runnable
 		System.out.println("Stopping Web");
 	}
 	
+	public static byte[] getBytesFromFile(File file) throws IOException {
+        InputStream is = new FileInputStream(file);
+    
+        // Get the size of the file
+        long length = file.length();
+    
+        if (length > Integer.MAX_VALUE) {
+            // File is too large
+        }
+    
+        // Create the byte array to hold the data
+        byte[] bytes = new byte[(int)length];
+    
+        // Read in the bytes
+        int offset = 0;
+        int numRead = 0;
+        while (offset < bytes.length
+               && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+            offset += numRead;
+        }
+    
+        // Ensure all the bytes have been read in
+        if (offset < bytes.length) {
+            throw new IOException("Could not completely read file "+file.getName());
+        }
+    
+        // Close the input stream and return bytes
+        is.close();
+        return bytes;
+    }
+	
 	private List<WebEventListener> _listeners =
 		new ArrayList<WebEventListener>();
 	
@@ -78,15 +118,43 @@ public class WebServer implements Runnable
 	
 	// call this method whenever you want to notify
 	// the event listeners of the particular event
-	private synchronized void firePokemonReceivedEvent(Pokemon pkm, String pid)
+	private synchronized void firePokemonReceivedEvent(Pokemon pkm, Trainer t, String pid)
 	{
 		//System.out.println("Fireing event");
-		PokemonReceivedEvent event = new PokemonReceivedEvent(this, pkm, pid);
+		PokemonReceivedEvent event = new PokemonReceivedEvent(this, pkm, t, pid);
 		Iterator<WebEventListener> i = _listeners.iterator();
 		while (i.hasNext())
 		{
 			//System.out.println("Sending event");
 			i.next().onPokemonReceived(event);
+		}
+	}
+	
+	// call this method whenever you want to notify
+	// the event listeners of the particular event
+	private synchronized void firePokemonSentEvent(Pokemon pkm, String pid)
+	{
+		//System.out.println("Fireing event");
+		PokemonSentEvent event = new PokemonSentEvent(this, pkm, pid);
+		Iterator<WebEventListener> i = _listeners.iterator();
+		while (i.hasNext())
+		{
+			//System.out.println("Sending event");
+			i.next().onPokemonSent(event);
+		}
+	}
+	
+	// call this method whenever you want to notify
+	// the event listeners of the particular event
+	private synchronized void fireStatusChangedtEvent(ServerStatusEvent.Status status)
+	{
+		//System.out.println("Fireing event");
+		ServerStatusEvent event = new ServerStatusEvent(this, status);
+		Iterator<WebEventListener> i = _listeners.iterator();
+		while (i.hasNext())
+		{
+			//System.out.println("Sending event");
+			i.next().onServerStatusChanged(event);
 		}
 	}
 	
@@ -171,7 +239,10 @@ public class WebServer implements Runnable
 			else
 			{
 				String action = req.getAction();
+				System.out.println(action);
 				String resp = "";
+				Pokemon pkm = null;
+				
 				if (action.equals("info"))
 					resp = "\u0001\u0000";
 				else if (action.equals("setProfile"))
@@ -181,7 +252,45 @@ public class WebServer implements Runnable
 				else if (action.equals("search"))
 					resp = "\u0001\u0000";
 				else if (action.equals("result"))
-					resp = "\u0005\u0000";
+				{
+					if(queuePokemon.size() == 0)
+					{
+						resp = "\u0005\u0000";
+					}
+					else
+					{
+						pkm = queuePokemon.pop();
+						byte[] data = pkm.getData();
+						byte[] encoded = pkm.encode();
+						String bin = "";
+						for(int i =0; i < encoded.length; ++i)
+						 bin += (char)encoded[i];
+						
+					    // Adding GTS data to end of file
+					    bin += "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000";
+					    bin += "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000";
+					    bin += ((char)data[0x08]) + ((char)data[0x09]); // new String(Arrays.copyOfRange(data, 0x08, 0x0a)); // id
+					    if (((data[0x40]) & 0x04) != 0)
+					    	bin += "\u0003"; // Gender
+					    else
+					    	bin += (char)(((int)(data[0x40]) & 2) + 1);
+					    bin += (char)data[0x8c]; // Level
+					    bin += "\u0001\u0000\u0003\u0000\u0000\u0000\u0000\u0000";
+					    bin += "\u00db\u0007\u0003" + '\n' + "\u0000\u0000\u0000\u0000"; // Date deposited (10 Mar 2011)
+					    bin += "\u00db\u0007\u0003\u0016\u0001\u0030\u0000\u0000"; // Date traded (?)
+					    bin += ((char)data[0x00]) + ((char)data[0x01]) + ((char)data[0x02]) + ((char)data[0x03]); //new String(Arrays.copyOfRange(data, 0x00, 0x04)); // PID
+					    bin += ((char)data[0x0c]) + ((char)data[0x0d]); // OT ID
+					    bin += ((char)data[0x0e]) + ((char)data[0x0f]); // OT Secret ID
+					    byte[] otName = Arrays.copyOfRange(data, 0x68, 0x78);
+					    for(int i =0; i < otName.length; ++i)
+							 bin += (char)otName[i]; // OT Name
+					    bin += "\u00DB\u0002"; // Country, City
+					    bin += "\u0046\u0001\u0015\u0002"; // Sprite, Exchanged (?), Version, Lang
+					    bin += "\u0001\u0000"; // Unknown
+
+						resp = bin;
+					}
+				}
 				else if (action.equals("post"))
 				{
 					String data = req.getVariables().get("data");
@@ -190,10 +299,10 @@ public class WebServer implements Runnable
 					//FileOutputStream fos = new FileOutputStream("/tmp/test.pkm");
 					
 					//fos.write(decrypt);
-
+					Trainer t = processGenVTrainer(bytes);
 					Pokemon p = new Pokemon(decrypt);
 
-					firePokemonReceivedEvent(p, req.getVariables().get("pid"));
+					firePokemonReceivedEvent(p, t, req.getVariables().get("pid"));
 					// System.out.println(p.getOTName());
 
 					resp = "\u000c\u0000";
@@ -211,6 +320,8 @@ public class WebServer implements Runnable
 					Response resp2 = new Response(resp);
 					// System.out.println(resp.toString());
 					out.print(resp2.toString());
+					if(pkm != null)
+						firePokemonSentEvent(pkm, req.getVariables().get("pid"));
 				}
 				catch (NoSuchAlgorithmException e)
 				{
@@ -224,6 +335,45 @@ public class WebServer implements Runnable
 				}
 				
 			}
+		}
+		
+		private Trainer processGenVTrainer(byte[] data)
+		{
+			Trainer t = new Trainer();
+			
+			byte[] b = Arrays.copyOfRange(data, 0x118, 0x12f);
+			DataInputStream in = new DataInputStream(new ByteArrayInputStream(b));
+			
+			byte gender = data[0x102];
+			try
+			{
+				t.gender = gender == (byte)0x0 ? Helper.Gender.Male : Helper.Gender.Female;
+				t.ID = Short.reverseBytes(in.readShort());
+				t.SecretID = Short.reverseBytes(in.readShort());
+				
+				String name = "";
+				
+				for (int i = 0; i < b.length / 2; ++i)
+				{
+					try
+					{
+						char c = Character.reverseBytes(in.readChar());
+						if (c == '\uffff')
+							break;
+						name += c;
+					}
+					catch (IOException e)
+					{
+					}
+				}
+				t.name = name;
+			}
+			catch (Throwable ex)
+			{
+				
+				
+			}
+			return t;
 		}
 	}
 }

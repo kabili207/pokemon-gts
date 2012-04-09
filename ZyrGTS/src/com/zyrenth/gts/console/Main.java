@@ -1,14 +1,10 @@
 package com.zyrenth.gts.console;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
-import org.apache.commons.codec.binary.Base64;
-
 import com.zyrenth.gts.DnsServer;
+import com.zyrenth.gts.PokemonSentEvent;
+import com.zyrenth.gts.ServerStatusEvent;
 import com.zyrenth.gts.WebEventListener;
 import com.zyrenth.gts.PokemonReceivedEvent;
-import com.zyrenth.gts.Response;
 import com.zyrenth.gts.WebServer;
 
 public class Main
@@ -28,6 +24,20 @@ public class Main
 			{
 				// TODO Auto-generated method stub
 				System.out.println(e.getPid() + " sent " + e.getPokemon().getOTName());
+			}
+
+			@Override
+			public void onPokemonSent(PokemonSentEvent e)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onServerStatusChanged(ServerStatusEvent e)
+			{
+				// TODO Auto-generated method stub
+				
 			}
 		});
 		server.run();

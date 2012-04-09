@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -353,5 +352,10 @@ public class Pokemon
 			return (rngseed >> 16);
 		}
 		
+	}
+
+	public byte[] getData()
+	{
+		return data;
 	}
 }

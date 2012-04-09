@@ -2,14 +2,15 @@ package com.zyrenth.gts.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.FlowLayout;
 
 import javax.swing.JFrame;
 
 
 public class MyFrame extends JFrame
 {
-	
+
+	private static final long serialVersionUID = -6427365071807252220L;
+
 	/**
 	 * @param args
 	 */

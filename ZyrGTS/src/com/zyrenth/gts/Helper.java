@@ -1,14 +1,15 @@
 package com.zyrenth.gts;
 
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.codec.binary.Base64;
 
 
 public class Helper
 {
-	public enum Generation { III, IV, V };
+	public enum Generation { III, IV, V }
+	
+	public enum Gender { Male, Female }
 	
 	public static String sha1(String data) throws Exception
 	{

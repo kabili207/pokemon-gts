@@ -1,33 +1,34 @@
 package com.zyrenth.gts.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontFormatException;
-import java.io.IOException;
 import java.io.InputStream;
 
-import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.zyrenth.gts.DnsServer;
+import com.zyrenth.gts.Helper;
 import com.zyrenth.gts.Pokemon;
+import com.zyrenth.gts.PokemonSentEvent;
+import com.zyrenth.gts.ServerStatusEvent;
+import com.zyrenth.gts.Trainer;
 import com.zyrenth.gts.WebEventListener;
 import com.zyrenth.gts.PokemonReceivedEvent;
 import com.zyrenth.gts.WebServer;
 
 public class MyPanel extends JPanel
 {
+
+	private static final long serialVersionUID = 7071594099866792128L;
 	private DnsServer dnsServer;
 	private Thread dnsThread;
 	
 	private JLabel label;
 	private WebServer webServer;
 	private Thread webThread;
-	private Font ttfReal = null;
 	private Font ttfBase = null;
 	private Font ttf12 = null;
 	private JLabel imgPokemon;
@@ -41,7 +42,6 @@ public class MyPanel extends JPanel
 			InputStream is = this.getClass().getResourceAsStream(fontFileName);
 			
 			ttfBase = Font.createFont(Font.TRUETYPE_FONT, is);
-			ttfReal = ttfBase.deriveFont(Font.PLAIN, 24);
 			ttf12 = ttfBase.deriveFont(Font.PLAIN, 15);
 		}
 		catch (Exception e)
@@ -50,11 +50,12 @@ public class MyPanel extends JPanel
 			e.printStackTrace();
 		}
 		
-		label = new JLabel(
-				"\u0024\u21d2\u21d4\u2200\u2203\u2227\u2228"
-						+ "\u2460\u2461\u2462\u2463\u2464\u2465\u2466\u2467\u2468\u2469\u246a\u246b\u246c\u246d\u246e\u246f"
-						+ "\u2470\u2471\u2472\u2473\u2474\u2475\u2476\u2477\u2478\u2479\u247a\u247b\u247c\u247d\u247e\u247f"
-						+ "\u2480\u2481\u2482\u2483\u2484\u2485\u2486\u2487");
+		//label = new JLabel(
+		//		"\u0024\u21d2\u21d4\u2200\u2203\u2227\u2228"
+		//				+ "\u2460\u2461\u2462\u2463\u2464\u2465\u2466\u2467\u2468\u2469\u246a\u246b\u246c\u246d\u246e\u246f"
+		//				+ "\u2470\u2471\u2472\u2473\u2474\u2475\u2476\u2477\u2478\u2479\u247a\u247b\u247c\u247d\u247e\u247f"
+		//				+ "\u2480\u2481\u2482\u2483\u2484\u2485\u2486\u2487");
+		label = new JLabel("Loading...");
 		if (ttf12 != null)
 			label.setFont(ttf12);
 		ImageIcon icon = createImageIcon("/images/sprites/normal/001.png", null);
@@ -100,8 +101,16 @@ public class MyPanel extends JPanel
 				try
 				{
 					Pokemon p = e.getPokemon();
-					label.setText(e.getPid() + " sent " + p.getOTName() + "'s "
-							+ p.getNickname());
+					Trainer t = e.getTrainer();
+					
+					// TODO: Add gender check to same
+					boolean same = t.name.equals(p.getOTName()) &&
+									t.ID == p.getOTID() &&
+									t.SecretID == p.getOTSecretID();
+					String gender = t.gender == Helper.Gender.Male ? "his" : "her";
+					
+					label.setText(t.name + " sent " + (same ? gender : (p.getOTName() + "'s"))
+							+ " " + p.getNickname());
 					String natID = getPokemonImage(p);
 					imgPokemon.setIcon(createImageIcon(natID,null));
 				}
@@ -110,6 +119,22 @@ public class MyPanel extends JPanel
 					ex.printStackTrace();
 					label.setText("Something failed");
 				}
+			}
+
+			@Override
+			public void onServerStatusChanged(ServerStatusEvent e)
+			{
+				if(e.getStatus() == ServerStatusEvent.Status.Started)
+					label.setText("GTS Ready");
+				
+			}
+
+			@Override
+			public void onPokemonSent(PokemonSentEvent e)
+			{
+				String natID = getPokemonImage(e.getPokemon());
+				imgPokemon.setIcon(createImageIcon(natID,null));
+				label.setText("Sent " + e.getPokemon().getNickname() + " to " + e.getPid());
 			}
 		});
 		webThread.start();

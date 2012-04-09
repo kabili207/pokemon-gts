@@ -1,14 +1,12 @@
 package com.zyrenth.gts.gui;
 import java.awt.BorderLayout;
-import java.awt.Color;
-
-import javax.swing.BorderFactory;
 import javax.swing.JApplet;
-import javax.swing.JLabel;
 
 
 public class MyApplet extends JApplet
 {
+	private static final long serialVersionUID = -452479009754353016L;
+
 	public void init() {
 	    //Execute a job on the event-dispatching thread:
 	    //creating this applet's GUI.
