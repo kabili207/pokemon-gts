@@ -33,7 +33,7 @@ public class Request
 			this.generation = Helper.Generation.V;
 			
 			this.request = data.substring(data.indexOf("/syachi2ds/web/") + 15,
-					data.indexOf("HTTP/1.1") - 1);
+					data.indexOf("HTTP/") - 1);
 			
 			Map<String, String> map = new HashMap<String, String>();
 			String[] strings = request.split("\\?");

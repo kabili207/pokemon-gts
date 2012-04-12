@@ -6,20 +6,29 @@ import java.net.DatagramSocket;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 
+/**
+ * 
+ * @author kabili
+ *
+ */
 public class DnsServer implements Runnable
 {
 	
 	private int port = 53, maxConnections = 0;
-	
+		
 	// Listen for incoming connections and handle them
 	public void run()
 	{
 		int i = 0;
-		System.out.println("Starting DNS Server");
+		//System.out.println("Starting DNS Server");
+		fireStatusChangedtEvent(ServerStatusEvent.Status.Starting, null);
 		try
 		{
 			//DatagramSocket dnsSock;
@@ -41,8 +50,8 @@ public class DnsServer implements Runnable
 			listener.setReuseAddress(true);
 			
 			// TODO: Send event on DNS start
-			System.out.println("DNS Listening on: " + localAddr.getHostAddress());
-			
+			//System.out.println("DNS Listening on: " + localAddr.getHostAddress());
+			fireStatusChangedtEvent(ServerStatusEvent.Status.Started, localAddr);
 			while ((i++ < maxConnections) || (maxConnections == 0))
 			{
 				byte[] buffer = new byte[512];
@@ -97,6 +106,30 @@ public class DnsServer implements Runnable
 		{
 			System.out.println("IOException on socket listen: " + ioe);
 			ioe.printStackTrace();
+		}
+	}
+	
+	private List<DnsEventListener> _listeners = new ArrayList<DnsEventListener>();
+	
+	public synchronized void addEventListener(DnsEventListener listener)
+	{
+		_listeners.add(listener);
+	}
+	
+	public synchronized void removeEventListener(DnsEventListener listener)
+	{
+		_listeners.remove(listener);
+	}
+	
+	// call this method whenever you want to notify
+	// the event listeners of the particular event
+	private synchronized void fireStatusChangedtEvent(ServerStatusEvent.Status status, InetAddress address)
+	{
+		ServerStatusEvent event = new ServerStatusEvent(this, status);
+		Iterator<DnsEventListener> i = _listeners.iterator();
+		while (i.hasNext())
+		{
+			i.next().onServerStatusChanged(event, address);
 		}
 	}
 	

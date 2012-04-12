@@ -326,9 +326,9 @@ public class Pokemon
 		
 		os.writeInt(Integer.reverseBytes((int) v));
 		
-		for (int i = 0; i < shifted.size(); ++i)
+		for (int i = 0; i < temp.size(); ++i)
 		{
-			ts = shifted.get(i).charValue();
+			ts = temp.get(i).charValue();
 			os.writeChar(Character.reverseBytes(ts));
 		}
 		

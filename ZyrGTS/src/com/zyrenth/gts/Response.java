@@ -60,11 +60,10 @@ public class Response
 	  return out.toString();
 	}
 	
-	@Override
-	public String toString()
+	public String createHeader(int length)
 	{
 		SimpleDateFormat dFormat = new SimpleDateFormat(
-				"EEE, dd MMM yyyy HH:mm:ss z");
+			"EEE, dd MMM yyyy HH:mm:ss z");
 		String date = dFormat.format(new Date());
 		return "HTTP/1.1 200 OK\r\n"
 				+ "Date: " + date + "\r\n"
@@ -73,10 +72,16 @@ public class Response
 				+ "cluster-server: aphexweb3\r\n"
 				+ "X-Server-Name: AW4\r\n"
 				+ "X-Powered-By: ASP.NET\r\n"
-				+ "Content-Length: " + data.length() + "\r\n"
+				+ "Content-Length: " + length + "\r\n"
 				+ "Content-Type: text/html\r\n"
 				+ "Set-Cookie: ASPSESSIONIDQCDBDDQS=JFDOAMPAGACBDMLNLFBCCNCI; path=/\r\n"
-				+ "Cache-control: private\r\n\r\n" + this.data;
+				+ "Cache-control: private\r\n\r\n";
+	}
+	
+	@Override
+	public String toString()
+	{
+		return createHeader(data.length()) + this.data;
 		
 	}
 	

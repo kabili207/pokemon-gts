@@ -2,13 +2,12 @@ package com.zyrenth.gts;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
@@ -17,7 +16,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
 
 public class WebServer implements Runnable
 {
@@ -34,17 +32,17 @@ public class WebServer implements Runnable
 		
 		int i = 0;
 		
-		System.out.println("Starting Web Server");
 		fireStatusChangedtEvent(ServerStatusEvent.Status.Starting);
 		try
 		{
-			File f = new File("/tmp/Tympole.pkm");
-			byte[] b = getBytesFromFile(f);
+			
+			File f = new File("/tmp/Saanaito.pkm");
+			byte[] b = Helper.getBytesFromFile(f);
 			queuePokemon.add(new Pokemon(b));
 			
-			f = new File("/tmp/Saanaito.pkm");
-			b = getBytesFromFile(f);
-			queuePokemon.add(new Pokemon(b));
+			// f = new File("/tmp/Tympole.pkm");
+			// b = getBytesFromFile(f);
+			// queuePokemon.add(new Pokemon(b));
 			
 			ServerSocket listener = new ServerSocket(port);
 			Socket server;
@@ -53,9 +51,9 @@ public class WebServer implements Runnable
 			fireStatusChangedtEvent(ServerStatusEvent.Status.Started);
 			
 			while ((i++ < maxConnections) || (maxConnections == 0))
-			{				
+			{
 				server = listener.accept();
-				//System.out.println("Connection established");
+				// System.out.println("Connection established");
 				doComms conn_c = new doComms(server);
 				Thread t = new Thread(conn_c);
 				t.start();
@@ -71,47 +69,14 @@ public class WebServer implements Runnable
 		System.out.println("Stopping Web");
 	}
 	
-	public static byte[] getBytesFromFile(File file) throws IOException {
-        InputStream is = new FileInputStream(file);
-    
-        // Get the size of the file
-        long length = file.length();
-    
-        if (length > Integer.MAX_VALUE) {
-            // File is too large
-        }
-    
-        // Create the byte array to hold the data
-        byte[] bytes = new byte[(int)length];
-    
-        // Read in the bytes
-        int offset = 0;
-        int numRead = 0;
-        while (offset < bytes.length
-               && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
-            offset += numRead;
-        }
-    
-        // Ensure all the bytes have been read in
-        if (offset < bytes.length) {
-            throw new IOException("Could not completely read file "+file.getName());
-        }
-    
-        // Close the input stream and return bytes
-        is.close();
-        return bytes;
-    }
-	
-	private List<WebEventListener> _listeners =
-		new ArrayList<WebEventListener>();
+	private List<WebEventListener> _listeners = new ArrayList<WebEventListener>();
 	
 	public synchronized void addEventListener(WebEventListener listener)
 	{
 		_listeners.add(listener);
 	}
 	
-	public synchronized void removeEventListener(
-			WebEventListener listener)
+	public synchronized void removeEventListener(WebEventListener listener)
 	{
 		_listeners.remove(listener);
 	}
@@ -120,12 +85,10 @@ public class WebServer implements Runnable
 	// the event listeners of the particular event
 	private synchronized void firePokemonReceivedEvent(Pokemon pkm, Trainer t, String pid)
 	{
-		//System.out.println("Fireing event");
 		PokemonReceivedEvent event = new PokemonReceivedEvent(this, pkm, t, pid);
 		Iterator<WebEventListener> i = _listeners.iterator();
 		while (i.hasNext())
 		{
-			//System.out.println("Sending event");
 			i.next().onPokemonReceived(event);
 		}
 	}
@@ -134,12 +97,10 @@ public class WebServer implements Runnable
 	// the event listeners of the particular event
 	private synchronized void firePokemonSentEvent(Pokemon pkm, String pid)
 	{
-		//System.out.println("Fireing event");
 		PokemonSentEvent event = new PokemonSentEvent(this, pkm, pid);
 		Iterator<WebEventListener> i = _listeners.iterator();
 		while (i.hasNext())
 		{
-			//System.out.println("Sending event");
 			i.next().onPokemonSent(event);
 		}
 	}
@@ -148,12 +109,10 @@ public class WebServer implements Runnable
 	// the event listeners of the particular event
 	private synchronized void fireStatusChangedtEvent(ServerStatusEvent.Status status)
 	{
-		//System.out.println("Fireing event");
 		ServerStatusEvent event = new ServerStatusEvent(this, status);
 		Iterator<WebEventListener> i = _listeners.iterator();
 		while (i.hasNext())
 		{
-			//System.out.println("Sending event");
 			i.next().onServerStatusChanged(event);
 		}
 	}
@@ -170,45 +129,36 @@ public class WebServer implements Runnable
 		
 		public void run()
 		{
-			//System.out.println("Running web thread");
 			input = "";
 			
 			try
 			{
 				// Get input from the client
-				BufferedReader d = new BufferedReader(new InputStreamReader(
-						server.getInputStream()));
+				BufferedReader d = new BufferedReader(new InputStreamReader(server.getInputStream()));
 				
 				while ((line = d.readLine()) != null && d.ready())
 				{
 					input = input + line + "\r\n";
-					// out.println("I got:" + line);
 				}
 				
 				// Now write to the client
-				//System.out.println(input);
+				System.out.println(input);
 				
 				Request req = new Request(input);
 				if (req.isValid())
 				{
-					 //System.out.println(req.getPage());
-					// System.out.println(req.getAction());
-					
-					//for (Map.Entry<String, String> kvp : req.getVariables()
-					//		.entrySet())
-					//{
-						// System.out.println(kvp.getKey() + " = " +
-						// kvp.getValue());
-					//}
 					if (req.getGeneration() == Helper.Generation.V)
 						processGenV(req, server);
 					
 				}
-				
-				// System.out.println("Overall message is:" + input);
-				// out.println("Overall message is:" + input);
-				
+								
 				server.close();
+			}
+			catch (NoSuchAlgorithmException nsae)
+			{
+				// TODO Send error event
+				System.out.println("Algorithm not found: ");
+				nsae.printStackTrace();
 			}
 			catch (IOException ioe)
 			{
@@ -222,18 +172,19 @@ public class WebServer implements Runnable
 				System.out.println("IOException on socket listen: " + e);
 				e.printStackTrace();
 			}
-			//System.out.println("Ending web thread");
+			// System.out.println("Ending web thread");
 		}
 		
 		private void processGenV(Request req, Socket server) throws Exception
 		{
-			PrintStream out = new PrintStream(server.getOutputStream());
+			// PrintStream out = new PrintStream(server.getOutputStream());
+			DataOutputStream out = new DataOutputStream(server.getOutputStream());
 			if (req.getVariables().size() == 1)
 			{
 				
 				Response resp = new Response("c9KcX1Cry3QKS2Ai7yxL6QiQGeBGeQKR");
 				// System.out.println(resp.toString());
-				out.print(resp.toString());
+				out.write(resp.toString().getBytes());
 				out.flush();
 			}
 			else
@@ -253,42 +204,54 @@ public class WebServer implements Runnable
 					resp = "\u0001\u0000";
 				else if (action.equals("result"))
 				{
-					if(queuePokemon.size() == 0)
+					if (queuePokemon.size() == 0)
 					{
 						resp = "\u0005\u0000";
 					}
 					else
 					{
-						pkm = queuePokemon.pop();
+						pkm = queuePokemon.peek();
 						byte[] data = pkm.getData();
 						byte[] encoded = pkm.encode();
-						String bin = "";
-						for(int i =0; i < encoded.length; ++i)
-						 bin += (char)encoded[i];
 						
-					    // Adding GTS data to end of file
-					    bin += "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000";
-					    bin += "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000";
-					    bin += ((char)data[0x08]) + ((char)data[0x09]); // new String(Arrays.copyOfRange(data, 0x08, 0x0a)); // id
-					    if (((data[0x40]) & 0x04) != 0)
-					    	bin += "\u0003"; // Gender
-					    else
-					    	bin += (char)(((int)(data[0x40]) & 2) + 1);
-					    bin += (char)data[0x8c]; // Level
-					    bin += "\u0001\u0000\u0003\u0000\u0000\u0000\u0000\u0000";
-					    bin += "\u00db\u0007\u0003" + '\n' + "\u0000\u0000\u0000\u0000"; // Date deposited (10 Mar 2011)
-					    bin += "\u00db\u0007\u0003\u0016\u0001\u0030\u0000\u0000"; // Date traded (?)
-					    bin += ((char)data[0x00]) + ((char)data[0x01]) + ((char)data[0x02]) + ((char)data[0x03]); //new String(Arrays.copyOfRange(data, 0x00, 0x04)); // PID
-					    bin += ((char)data[0x0c]) + ((char)data[0x0d]); // OT ID
-					    bin += ((char)data[0x0e]) + ((char)data[0x0f]); // OT Secret ID
-					    byte[] otName = Arrays.copyOfRange(data, 0x68, 0x78);
-					    for(int i =0; i < otName.length; ++i)
-							 bin += (char)otName[i]; // OT Name
-					    bin += "\u00DB\u0002"; // Country, City
-					    bin += "\u0046\u0001\u0015\u0002"; // Sprite, Exchanged (?), Version, Lang
-					    bin += "\u0001\u0000"; // Unknown
-
-						resp = bin;
+						ByteArrayOutputStream bais = new ByteArrayOutputStream();
+						
+						// Adding GTS data to end of file
+						bais.write(encoded);
+						bais.write(new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+						bais.write(Arrays.copyOfRange(data, 0x08, 0x0a)); // id
+						if (((data[0x40]) & 0x04) != 0)
+							bais.write(0x3); // Gender
+						else
+							bais.write(((data[0x40]) & 2) + 1);
+						bais.write(data[0x8c]); // Level
+						bais.write(new byte[] { 1, 0, 3, 0, 0, 0, 0, 0 });
+						bais.write(new byte[] { (byte) 0xdb, 7, 3, 0xa, 0, 0, 0, 0 }); // Date deposited (10 Mar 2011)
+						bais.write(new byte[] { (byte) 0xdb, 7, 3, 0x16, 1, 0x30, 0, 0 }); // Date traded (?)
+						
+						bais.write(Arrays.copyOfRange(data, 0x00, 0x04)); // PID
+						bais.write(Arrays.copyOfRange(data, 0x0c, 0x0e)); // OT ID
+						bais.write(Arrays.copyOfRange(data, 0x0e, 0x10)); // OT Secret ID
+						bais.write(Arrays.copyOfRange(data, 0x68, 0x78)); // OT Name
+						
+						bais.write(new byte[] { (byte) 0xdb, 2 }); // Country, City
+						
+						bais.write(new byte[] { 0x46, 1, 0x15, 2 }); // Sprite, Exchanged (?), Version, Lang
+						
+						bais.write(new byte[] { 1, 0 }); // Unknown
+						
+						byte[] bb = bais.toByteArray();
+						String hash = "HZEdGCzcGGLvguqUEKQN" + Helper.b64Encode(bb) + "HZEdGCzcGGLvguqUEKQN";
+						hash = Helper.sha1(hash);
+						
+						Response resp2 = new Response("");
+						out.write(resp2.createHeader(bb.length + hash.length()).getBytes());
+						out.write(bb);
+						out.writeBytes(hash);
+						if (pkm != null)
+							firePokemonSentEvent(pkm, req.getVariables().get("pid"));
+						return;
+						
 					}
 				}
 				else if (action.equals("post"))
@@ -296,43 +259,29 @@ public class WebServer implements Runnable
 					String data = req.getVariables().get("data");
 					byte[] bytes = Helper.b64Decode(data);
 					byte[] decrypt = Pokemon.makePkm(bytes);
-					//FileOutputStream fos = new FileOutputStream("/tmp/test.pkm");
+					// FileOutputStream fos = new
+					// FileOutputStream("/tmp/test.pkm");
 					
-					//fos.write(decrypt);
+					// fos.write(decrypt);
 					Trainer t = processGenVTrainer(bytes);
 					Pokemon p = new Pokemon(decrypt);
-
+					
 					firePokemonReceivedEvent(p, t, req.getVariables().get("pid"));
 					// System.out.println(p.getOTName());
-
+					
 					resp = "\u000c\u0000";
 					
 				}
 				
-				try
-				{
-					
-					String hash = "HZEdGCzcGGLvguqUEKQN"
-							+ Helper.b64Encode(resp) + "HZEdGCzcGGLvguqUEKQN";
-					hash = Helper.sha1(hash);
-					//System.out.println(hash);
-					resp += hash;
-					Response resp2 = new Response(resp);
-					// System.out.println(resp.toString());
-					out.print(resp2.toString());
-					if(pkm != null)
-						firePokemonSentEvent(pkm, req.getVariables().get("pid"));
-				}
-				catch (NoSuchAlgorithmException e)
-				{
-					// TODO: Send error event
-					 System.out.println("No algorithm");
-				}
-				catch (Exception e)
-				{
-					// TODO: Send error event
-					System.out.println("Error responding: " + e);
-				}
+				String hash = "HZEdGCzcGGLvguqUEKQN" + Helper.b64Encode(resp) + "HZEdGCzcGGLvguqUEKQN";
+				hash = Helper.sha1(hash);
+				// System.out.println(hash);
+				resp += hash;
+				Response resp2 = new Response(resp);
+				// System.out.println(resp.toString());
+				out.write(resp2.toString().getBytes());
+				if (pkm != null)
+					firePokemonSentEvent(pkm, req.getVariables().get("pid"));
 				
 			}
 		}
@@ -347,7 +296,7 @@ public class WebServer implements Runnable
 			byte gender = data[0x102];
 			try
 			{
-				t.gender = gender == (byte)0x0 ? Helper.Gender.Male : Helper.Gender.Female;
+				t.gender = gender == (byte) 0x0 ? Helper.Gender.Male : Helper.Gender.Female;
 				t.ID = Short.reverseBytes(in.readShort());
 				t.SecretID = Short.reverseBytes(in.readShort());
 				
@@ -370,7 +319,6 @@ public class WebServer implements Runnable
 			}
 			catch (Throwable ex)
 			{
-				
 				
 			}
 			return t;
