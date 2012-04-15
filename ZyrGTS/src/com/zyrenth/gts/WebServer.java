@@ -16,11 +16,13 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class WebServer implements Runnable
 {
 	private static int port = 80, maxConnections = 0;
-	private LinkedList<Pokemon> queuePokemon = new LinkedList<Pokemon>();
+	private LinkedBlockingQueue<Pokemon> queuePokemon = new LinkedBlockingQueue<Pokemon>();
+	private static final Object QUEUE_LOCK = new Object();
 	
 	public WebServer()
 	{
@@ -36,9 +38,9 @@ public class WebServer implements Runnable
 		try
 		{
 			
-			File f = new File("/tmp/Saanaito.pkm");
-			byte[] b = Helper.getBytesFromFile(f);
-			queuePokemon.add(new Pokemon(b));
+			//File f = new File("/tmp/Saanaito.pkm");
+			//byte[] b = Helper.getBytesFromFile(f);
+			//queuePokemon.add(new Pokemon(b));
 			
 			// f = new File("/tmp/Tympole.pkm");
 			// b = getBytesFromFile(f);
@@ -67,6 +69,14 @@ public class WebServer implements Runnable
 		
 		// TODO: Send an event on web stop
 		System.out.println("Stopping Web");
+	}
+	
+	public void addPokemon(PokemonGen5 p)
+	{
+		synchronized(QUEUE_LOCK)
+		{
+			queuePokemon.add(p);
+		}
 	}
 	
 	private List<WebEventListener> _listeners = new ArrayList<WebEventListener>();
@@ -142,7 +152,7 @@ public class WebServer implements Runnable
 				}
 				
 				// Now write to the client
-				System.out.println(input);
+				//System.out.println(input);
 				
 				Request req = new Request(input);
 				if (req.isValid())
@@ -190,9 +200,9 @@ public class WebServer implements Runnable
 			else
 			{
 				String action = req.getAction();
-				System.out.println(action);
+				//System.out.println(action);
 				String resp = "";
-				Pokemon pkm = null;
+				PokemonGen5 pkm = null;
 				
 				if (action.equals("info"))
 					resp = "\u0001\u0000";
@@ -204,13 +214,27 @@ public class WebServer implements Runnable
 					resp = "\u0001\u0000";
 				else if (action.equals("result"))
 				{
-					if (queuePokemon.size() == 0)
+					synchronized(QUEUE_LOCK)
+					{
+						for(Pokemon p : queuePokemon)
+						{
+							if(!(p instanceof PokemonGen5))
+							{
+								// TODO: Try to create a Gen 5 pokemon instead
+								continue;
+							}
+							pkm = (PokemonGen5)p;
+							break;
+						}
+						if(pkm != null)
+							queuePokemon.remove(pkm);
+					}
+					if (pkm == null)
 					{
 						resp = "\u0005\u0000";
 					}
 					else
 					{
-						pkm = queuePokemon.peek();
 						byte[] data = pkm.getData();
 						byte[] encoded = pkm.encode();
 						
@@ -258,13 +282,13 @@ public class WebServer implements Runnable
 				{
 					String data = req.getVariables().get("data");
 					byte[] bytes = Helper.b64Decode(data);
-					byte[] decrypt = Pokemon.makePkm(bytes);
+					byte[] decrypt = PokemonGen5.makePkm(bytes);
 					// FileOutputStream fos = new
 					// FileOutputStream("/tmp/test.pkm");
 					
 					// fos.write(decrypt);
 					Trainer t = processGenVTrainer(bytes);
-					Pokemon p = new Pokemon(decrypt);
+					Pokemon p = new PokemonGen5(decrypt);
 					
 					firePokemonReceivedEvent(p, t, req.getVariables().get("pid"));
 					// System.out.println(p.getOTName());

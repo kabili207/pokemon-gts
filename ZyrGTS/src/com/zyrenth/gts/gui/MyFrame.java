@@ -28,7 +28,9 @@ public class MyFrame extends JFrame
 				Container content = f.getContentPane();
 				content.setBackground(Color.white);
 				content.setLayout(new BorderLayout());
-				content.add(new MyPanel());
+				MyPanel panel = new MyPanel();
+				content.add(panel);
+				f.setJMenuBar(panel.getMenuBar());
 				// f.addWindowListener();
 				f.setTitle("Frame test");
 				f.setVisible(true);

@@ -22,6 +22,8 @@ public class MyApplet extends JApplet
 	}
 
 	private void createGUI() {
-	    getContentPane().add(new MyPanel(), BorderLayout.CENTER);
+		MyPanel panel = new MyPanel();
+		this.setJMenuBar(panel.getMenuBar());
+	    getContentPane().add(panel, BorderLayout.CENTER);
 	}
 }
