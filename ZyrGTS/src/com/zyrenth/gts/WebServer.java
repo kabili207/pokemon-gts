@@ -58,7 +58,6 @@ public class WebServer implements Runnable
 			ServerSocket listener = new ServerSocket(PORT);
 			Socket server;
 			
-			// TODO: Send an event on web start
 			fireStatusChangedEvent(ServerStatusEvent.Status.Started);
 			
 			while ((i++ < MAX_CONNECTIONS) || (MAX_CONNECTIONS == 0))
@@ -75,9 +74,11 @@ public class WebServer implements Runnable
 			System.out.println("IOException on socket listen: " + ioe);
 			ioe.printStackTrace();
 		}
-		
-		fireStatusChangedEvent(ServerStatusEvent.Status.Stopped);
-		//System.out.println("Stopping Web");
+		finally
+		{
+			fireStatusChangedEvent(ServerStatusEvent.Status.Stopped);
+			//System.out.println("Stopping Web");
+		}
 	}
 	
 	public void addPokemon(Pokemon p)

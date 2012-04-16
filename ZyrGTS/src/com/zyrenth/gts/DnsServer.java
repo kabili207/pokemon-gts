@@ -109,8 +109,10 @@ public class DnsServer implements Runnable
 			System.out.println("IOException on socket listen: " + ioe);
 			ioe.printStackTrace();
 		}
-		
-		fireStatusChangedtEvent(ServerStatusEvent.Status.Stopped, null);
+		finally
+		{
+			fireStatusChangedtEvent(ServerStatusEvent.Status.Stopped, null);
+		}
 
 	}
 	
