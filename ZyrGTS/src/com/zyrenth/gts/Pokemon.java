@@ -10,18 +10,42 @@ public abstract class Pokemon {
 
 	public abstract byte[] encode() throws IOException;
 
+	/**
+	 * Gets a value indicating if this Pokemon is shiny
+	 * @return true if Pokemon is shiny, otherwise false
+	 */
 	public abstract boolean isShiny();
 
 	public abstract int getPID();
 
+	/**
+	 * Gets the original trainer's secret ID
+	 * @return the original trainer's secret ID
+	 */
 	public abstract short getOTSecretID();
 
+	/**
+	 * Gets the original trainer's ID
+	 * @return the original trainer's sID
+	 */
 	public abstract short getOTID();
 
+	/**
+	 * Gets the National Pokedex number for this pokemon
+	 * @return the National Pokedex number for this pokemon
+	 */
 	public abstract short getNatID();
 
+	/**
+	 * Gets the pokemon's nickname
+	 * @return the Pokemon's nickname
+	 */
 	public abstract String getNickname();
 
+	/**
+	 * Gets the original trainer's name
+	 * @return the original trainer's name
+	 */
 	public abstract String getOTName();
 	
 	public static byte[] makePkm(byte[] bytes) throws IOException

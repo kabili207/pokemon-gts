@@ -18,12 +18,21 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * The web server that is used by the GTS to send and receive Pokemon.
+ * The server needs to be run on port 80 which may require administrative
+ * privileges.
+ * 
+ * @author kabili
+ */
 public class WebServer implements Runnable
 {
-	private static int port = 80, maxConnections = 0;
-	private LinkedBlockingQueue<Pokemon> queuePokemon = new LinkedBlockingQueue<Pokemon>();
+	private static final int PORT = 80;
+	private static final int MAX_CONNECTIONS = 0;
 	private static final Object QUEUE_LOCK = new Object();
 	
+	private LinkedBlockingQueue<Pokemon> queuePokemon = new LinkedBlockingQueue<Pokemon>();
+		
 	public WebServer()
 	{
 	}
@@ -34,7 +43,7 @@ public class WebServer implements Runnable
 		
 		int i = 0;
 		
-		fireStatusChangedtEvent(ServerStatusEvent.Status.Starting);
+		fireStatusChangedEvent(ServerStatusEvent.Status.Starting);
 		try
 		{
 			
@@ -46,13 +55,13 @@ public class WebServer implements Runnable
 			// b = getBytesFromFile(f);
 			// queuePokemon.add(new Pokemon(b));
 			
-			ServerSocket listener = new ServerSocket(port);
+			ServerSocket listener = new ServerSocket(PORT);
 			Socket server;
 			
 			// TODO: Send an event on web start
-			fireStatusChangedtEvent(ServerStatusEvent.Status.Started);
+			fireStatusChangedEvent(ServerStatusEvent.Status.Started);
 			
-			while ((i++ < maxConnections) || (maxConnections == 0))
+			while ((i++ < MAX_CONNECTIONS) || (MAX_CONNECTIONS == 0))
 			{
 				server = listener.accept();
 				// System.out.println("Connection established");
@@ -67,11 +76,11 @@ public class WebServer implements Runnable
 			ioe.printStackTrace();
 		}
 		
-		// TODO: Send an event on web stop
-		System.out.println("Stopping Web");
+		fireStatusChangedEvent(ServerStatusEvent.Status.Stopped);
+		//System.out.println("Stopping Web");
 	}
 	
-	public void addPokemon(PokemonGen5 p)
+	public void addPokemon(Pokemon p)
 	{
 		synchronized(QUEUE_LOCK)
 		{
@@ -103,8 +112,11 @@ public class WebServer implements Runnable
 		}
 	}
 	
-	// call this method whenever you want to notify
-	// the event listeners of the particular event
+	/**
+	 * Fires an event to any listeners telling them the specified Pokemon was sent
+	 * @param pkm the Pokemon that was sent
+	 * @param pid the PID of the game the Pokemon was sent to
+	 */
 	private synchronized void firePokemonSentEvent(Pokemon pkm, String pid)
 	{
 		PokemonSentEvent event = new PokemonSentEvent(this, pkm, pid);
@@ -115,9 +127,11 @@ public class WebServer implements Runnable
 		}
 	}
 	
-	// call this method whenever you want to notify
-	// the event listeners of the particular event
-	private synchronized void fireStatusChangedtEvent(ServerStatusEvent.Status status)
+	/**
+	 * Fires a status changed event to any listeners registered.
+	 * @param status the server's new status
+	 */
+	private synchronized void fireStatusChangedEvent(ServerStatusEvent.Status status)
 	{
 		ServerStatusEvent event = new ServerStatusEvent(this, status);
 		Iterator<WebEventListener> i = _listeners.iterator();

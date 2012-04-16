@@ -14,14 +14,17 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
+ * The DNS server required by the GTS in order to intercept requests to 
+ * Nintendo's servers and redirect them to a WebServer. This server needs
+ * to run on port 53 which may require administrative privileges.
  * 
  * @author kabili
- *
  */
 public class DnsServer implements Runnable
 {
-	
-	private int port = 53, maxConnections = 0;
+
+	private static final int PORT = 53;
+	private static final int MAX_CONNECTIONS = 0;
 		
 	// Listen for incoming connections and handle them
 	public void run()
@@ -46,13 +49,13 @@ public class DnsServer implements Runnable
 			}
 
 			
-			DatagramSocket listener = new DatagramSocket(port);
+			DatagramSocket listener = new DatagramSocket(PORT);
 			listener.setReuseAddress(true);
 			
 			// TODO: Send event on DNS start
 			//System.out.println("DNS Listening on: " + localAddr.getHostAddress());
 			fireStatusChangedtEvent(ServerStatusEvent.Status.Started, localAddr);
-			while ((i++ < maxConnections) || (maxConnections == 0))
+			while ((i++ < MAX_CONNECTIONS) || (MAX_CONNECTIONS == 0))
 			{
 				byte[] buffer = new byte[512];
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -68,7 +71,7 @@ public class DnsServer implements Runnable
 				
 				
 				DatagramSocket datagramSocket = new DatagramSocket();
-				DatagramPacket realDns = new DatagramPacket(r, r.length, googleDns, port);
+				DatagramPacket realDns = new DatagramPacket(r, r.length, googleDns, PORT);
 				
 				datagramSocket.send(realDns);
 				datagramSocket.receive(packet2);
@@ -99,14 +102,16 @@ public class DnsServer implements Runnable
 				listener.send(response);
 				
 			}
-			// TODO: Send event on DNS stop
-			System.out.println("Stopping DNS");
+			
 		}
 		catch (IOException ioe)
 		{
 			System.out.println("IOException on socket listen: " + ioe);
 			ioe.printStackTrace();
 		}
+		
+		fireStatusChangedtEvent(ServerStatusEvent.Status.Stopped, null);
+
 	}
 	
 	private List<DnsEventListener> _listeners = new ArrayList<DnsEventListener>();
