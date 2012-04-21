@@ -2,6 +2,10 @@ package com.zyrenth.gts;
 
 import java.net.InetAddress;
 
+/**
+ * An event listener for the GTS Domain Name Server
+ * @author kabili
+ */
 public interface DnsEventListener
 {
 
@@ -12,5 +16,14 @@ public interface DnsEventListener
 	 * will always be null except for the Started status
 	 */
 	void onServerStatusChanged(ServerStatusEvent event, InetAddress address);
+
+	/**
+	 * Occurs whenever the DNS server detects the game trying to check with Nintendo's
+	 * servers if a Pokemon is valid or not. This mostly occurs with poorly hacked
+	 * Pokemon, however it can happen with legitimate event Pokemon. If a Pokemon is
+	 * deemed invalid it will not be sent to the GTS.
+	 * @param address
+	 */
+	void onValidityCheck(InetAddress address);
 	
 }

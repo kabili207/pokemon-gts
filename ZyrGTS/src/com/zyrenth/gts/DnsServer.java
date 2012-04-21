@@ -31,7 +31,7 @@ public class DnsServer implements Runnable
 	{
 		int i = 0;
 		//System.out.println("Starting DNS Server");
-		fireStatusChangedtEvent(ServerStatusEvent.Status.Starting, null);
+		fireStatusChangedEvent(ServerStatusEvent.Status.Starting, null);
 		try
 		{
 			//DatagramSocket dnsSock;
@@ -54,7 +54,7 @@ public class DnsServer implements Runnable
 			
 			// TODO: Send event on DNS start
 			//System.out.println("DNS Listening on: " + localAddr.getHostAddress());
-			fireStatusChangedtEvent(ServerStatusEvent.Status.Started, localAddr);
+			fireStatusChangedEvent(ServerStatusEvent.Status.Started, localAddr);
 			while ((i++ < MAX_CONNECTIONS) || (MAX_CONNECTIONS == 0))
 			{
 				byte[] buffer = new byte[512];
@@ -85,6 +85,7 @@ public class DnsServer implements Runnable
 					// Requested domain is https://pkvldtprod.nintendo.co.jp/
 					// DS is attempting to verifying the validity of a pokemon.
 					// TODO: Send an event
+					fireValidityCheckEvent(packet.getAddress());
 				}
 				
 				if(resp.contains("gamestats2"))
@@ -111,18 +112,26 @@ public class DnsServer implements Runnable
 		}
 		finally
 		{
-			fireStatusChangedtEvent(ServerStatusEvent.Status.Stopped, null);
+			fireStatusChangedEvent(ServerStatusEvent.Status.Stopped, null);
 		}
 
 	}
 	
 	private List<DnsEventListener> _listeners = new ArrayList<DnsEventListener>();
-	
+
+	/**
+	 * Adds a DnsEventListener to the DNS server.
+	 * @param listener the DnsEventListener to be added
+	 */
 	public synchronized void addEventListener(DnsEventListener listener)
 	{
 		_listeners.add(listener);
 	}
 	
+	/**
+	 * Removes a DnsEventListener from the DNS server.
+	 * @param listener the DnsEventListener to be removed
+	 */
 	public synchronized void removeEventListener(DnsEventListener listener)
 	{
 		_listeners.remove(listener);
@@ -130,13 +139,24 @@ public class DnsServer implements Runnable
 	
 	// call this method whenever you want to notify
 	// the event listeners of the particular event
-	private synchronized void fireStatusChangedtEvent(ServerStatusEvent.Status status, InetAddress address)
+	private synchronized void fireStatusChangedEvent(ServerStatusEvent.Status status, InetAddress address)
 	{
 		ServerStatusEvent event = new ServerStatusEvent(this, status);
 		Iterator<DnsEventListener> i = _listeners.iterator();
 		while (i.hasNext())
 		{
 			i.next().onServerStatusChanged(event, address);
+		}
+	}
+	
+	// call this method whenever you want to notify
+	// the event listeners of the particular event
+	private synchronized void fireValidityCheckEvent(InetAddress address)
+	{
+		Iterator<DnsEventListener> i = _listeners.iterator();
+		while (i.hasNext())
+		{
+			i.next().onValidityCheck(address);
 		}
 	}
 	

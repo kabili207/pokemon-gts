@@ -8,7 +8,10 @@ import java.security.MessageDigest;
 
 import org.apache.commons.codec.binary.Base64;
 
-
+/**
+ * Provides helper functions to the GTS library
+ * @author kabili
+ */
 public class Helper
 {
 	public enum Generation {
@@ -39,11 +42,21 @@ public class Helper
 		return byteArrayToHexString(md.digest(data));
 	}
 	
+	/**
+	 * Returns a URL safe base 64 encoded string representation of the specified string
+	 * @param data the string to encode
+	 * @return a URL safe base 64 encoded string
+	 */
 	public static String b64Encode(String data)
 	{
 		return b64Encode(data.getBytes());
 	}
-
+	
+	/**
+	 * Returns a URL safe base 64 encoded string representation of the specified byte array
+	 * @param data the byte array to encode
+	 * @return a URL safe base 64 encoded string
+	 */
 	public static String b64Encode(byte[] binaryData)
 	{
 		// We can't useencodeBase64URLSafeString here because

@@ -81,6 +81,10 @@ public class WebServer implements Runnable
 		}
 	}
 	
+	/**
+	 * Adds a Pokemon object to the send queue
+	 * @param p the Pokemon to send
+	 */
 	public void addPokemon(Pokemon p)
 	{
 		synchronized(QUEUE_LOCK)
@@ -91,11 +95,19 @@ public class WebServer implements Runnable
 	
 	private List<WebEventListener> _listeners = new ArrayList<WebEventListener>();
 	
+	/**
+	 * Adds a WebEventListener to the web server.
+	 * @param listener the WebEventListener to be added
+	 */
 	public synchronized void addEventListener(WebEventListener listener)
 	{
 		_listeners.add(listener);
 	}
 	
+	/**
+	 * Removes a WebEventListener from the web server.
+	 * @param listener the WebEventListener to be removed
+	 */
 	public synchronized void removeEventListener(WebEventListener listener)
 	{
 		_listeners.remove(listener);

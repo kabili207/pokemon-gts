@@ -171,6 +171,12 @@ public class MyPanel extends JPanel
 							}
 							
 						}
+
+						@Override
+						public void onValidityCheck(InetAddress address) {
+							// TODO Auto-generated method stub
+							
+						}
 						
 					});
 					
