@@ -5,12 +5,21 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class PokemonGen5 extends Pokemon
+public class PokemonGen5 extends Pokemon implements Serializable
 {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2918646173091332187L;
+
 	public static final String shiftind = "\u0000\u0001\u0002\u0003\u0000"
 			+ "\u0001\u0003\u0002\u0000\u0002\u0001\u0003\u0000\u0002\u0003\u0001"
 			+ "\u0000\u0003\u0001\u0002\u0000\u0003\u0002\u0001\u0001\u0000\u0002"
@@ -174,6 +183,19 @@ public class PokemonGen5 extends Pokemon
 				((pid >> 16) ^ (pid & 0xffff))) & 0xFFFFFFFFL;
 		System.out.println(tmp);
 		return  tmp < 8;
+	}
+	
+	private void writeObject(ObjectOutputStream out) throws IOException
+	{
+		out.write(data.length);
+		out.write(data);
+	}
+	
+	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException
+	{
+		int length = in.readInt();
+		data = new byte[length];
+		in.readFully(data);
 	}
 	
 	public byte[] encode() throws IOException

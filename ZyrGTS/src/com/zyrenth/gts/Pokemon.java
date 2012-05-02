@@ -1,8 +1,14 @@
 package com.zyrenth.gts;
 
 import java.io.IOException;
+import java.io.Serializable;
 
-public abstract class Pokemon {
+public abstract class Pokemon implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8841578469549973671L;
 
 	public Pokemon() {
 		super();
