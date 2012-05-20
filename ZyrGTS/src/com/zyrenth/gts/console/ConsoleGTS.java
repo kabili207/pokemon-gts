@@ -19,6 +19,10 @@ public class ConsoleGTS
 	private static Thread dnsThread;
 	public static void main(String[] args)
 	{
+		System.out.println(Helper.getAppDataDirectory());
+		if(1 > 0)
+		return;
+		
 		dnsServer = new DnsServer();
 		dnsServer.addEventListener(new DnsEventListener()
 		{
