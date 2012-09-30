@@ -47,6 +47,50 @@ public class PokemonGen5 extends Pokemon implements Serializable
 		else if (data.length == 136)
 		{
 			// TODO: Add party data
+			/*
+			try {
+
+				ByteArrayOutputStream bais = new ByteArrayOutputStream();
+			
+				bais.write(data);
+				
+			   // lv = __level()
+			   // id = pkm[0x08] + (pkm[0x09] << 8)
+
+				bais.write(new byte[] {0,0,0,0}); // 0x88 to 0x8b
+			    //s += chr(lv)         # 0x8c
+			    bais.write(0); // 0x8d
+			   // s += __stats(lv, id) # 0x8e to 0x9b
+			    bais.write(new byte[] {0,0,0,0, 0}); // 0x9c to 0xa0
+			    bais.write(2); // 0xa1
+			    bais.write(7); // 0xa2
+			    bais.write(new byte[] {
+			    		(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff,
+			    		(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff,
+			    		(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff }); // 0xa3 to 0xb9
+			    bais.write(new byte[] {0,0}); // 0xba to 0xbb
+			    bais.write(new byte[] {(byte)0xff,(byte)0xff}); //  0xbc to 0xbd
+			    if ((data[0x40] & 4) == 4) // 0xbe to 0xbf; de01 if genderless, 0000 otherwise
+			    	bais.write(new byte[] {(byte)0xde,(byte)0x01});
+			    else
+			    	 bais.write(new byte[] {0,0});
+			    bais.write(new byte[] {(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff}); // 0xc0 to 0xc6
+			    bais.write((byte)0x88); // 0xc7
+			    bais.write(1); // 0xc8
+			    bais.write(new byte[] {(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff}); // 0xc9 to 0xcd
+			    bais.write((byte)0xac); // 0xce
+			    bais.write(1); // 0xcf
+			    bais.write(new byte[] {(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff}); // 0xd0 to 0xd3
+			    bais.write(new byte[] {0,0,0,0,0,0,0,0}); // 0xd4 to 0xdb
+				
+				this.data = bais.toByteArray();
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
+			}
+			*/
+						
 		}
 		else
 		{

@@ -31,6 +31,9 @@ public class WebServer implements Runnable
 	private static final int MAX_CONNECTIONS = 0;
 	private static final Object QUEUE_LOCK = new Object();
 	
+	private static final String GEN_V_TOKEN = "c9KcX1Cry3QKS2Ai7yxL6QiQGeBGeQKR";
+	private static final String GEN_V_SALT = "HZEdGCzcGGLvguqUEKQN";
+	
 	private LinkedBlockingQueue<Pokemon> queuePokemon = new LinkedBlockingQueue<Pokemon>();
 		
 	public WebServer()
@@ -71,8 +74,9 @@ public class WebServer implements Runnable
 		}
 		catch (IOException ioe)
 		{
-			System.out.println("IOException on socket listen: " + ioe);
-			ioe.printStackTrace();
+			//System.out.println("IOException on socket listen: " + ioe);
+			//ioe.printStackTrace();
+			fireServerErrorEvent(ioe);
 		}
 		finally
 		{
@@ -154,6 +158,19 @@ public class WebServer implements Runnable
 		}
 	}
 	
+	/**
+	 * Fires a status changed event to any listeners registered.
+	 * @param status the server's new status
+	 */
+	private synchronized void fireServerErrorEvent(Exception e)
+	{
+		Iterator<WebEventListener> i = _listeners.iterator();
+		while (i.hasNext())
+		{
+			i.next().onServerError(e);
+		}
+	}
+	
 	class doComms implements Runnable
 	{
 		private Socket server;
@@ -219,7 +236,7 @@ public class WebServer implements Runnable
 			if (req.getVariables().size() == 1)
 			{
 				
-				Response resp = new Response("c9KcX1Cry3QKS2Ai7yxL6QiQGeBGeQKR");
+				Response resp = new Response(GEN_V_TOKEN);
 				// System.out.println(resp.toString());
 				out.write(resp.toString().getBytes());
 				out.flush();
@@ -292,7 +309,7 @@ public class WebServer implements Runnable
 						bais.write(new byte[] { 1, 0 }); // Unknown
 						
 						byte[] bb = bais.toByteArray();
-						String hash = "HZEdGCzcGGLvguqUEKQN" + Helper.b64Encode(bb) + "HZEdGCzcGGLvguqUEKQN";
+						String hash = GEN_V_SALT + Helper.b64Encode(bb) + GEN_V_SALT;
 						hash = Helper.sha1(hash);
 						
 						Response resp2 = new Response("");
@@ -310,26 +327,22 @@ public class WebServer implements Runnable
 					String data = req.getVariables().get("data");
 					byte[] bytes = Helper.b64Decode(data);
 					byte[] decrypt = PokemonGen5.makePkm(bytes);
-					// FileOutputStream fos = new
-					// FileOutputStream("/tmp/test.pkm");
-					
-					// fos.write(decrypt);
+
 					Trainer t = processGenVTrainer(bytes);
 					Pokemon p = new PokemonGen5(decrypt);
 					
 					firePokemonReceivedEvent(p, t, req.getVariables().get("pid"));
-					// System.out.println(p.getOTName());
 					
 					resp = "\u000c\u0000";
 					
 				}
 				
-				String hash = "HZEdGCzcGGLvguqUEKQN" + Helper.b64Encode(resp) + "HZEdGCzcGGLvguqUEKQN";
+				String hash = GEN_V_SALT + Helper.b64Encode(resp) + GEN_V_SALT;
 				hash = Helper.sha1(hash);
-				// System.out.println(hash);
+
 				resp += hash;
 				Response resp2 = new Response(resp);
-				// System.out.println(resp.toString());
+
 				out.write(resp2.toString().getBytes());
 				if (pkm != null)
 					firePokemonSentEvent(pkm, req.getVariables().get("pid"));

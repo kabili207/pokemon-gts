@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0+" codebase="" href="">
+    <information>
+        <title>Zyrenth GTS GUI</title>
+        <vendor>Andrew Nagle</vendor>
+    </information>
+    <resources>
+        <!-- Application Resources -->
+        <j2se version="1.6+"
+            href="http://java.sun.com/products/autodl/j2se" />
+        <jar href="zyr-gts-gui.jar" main="true" />
+
+    </resources>
+    <applet-desc 
+         name="Zyrenth GTS GUI"
+         main-class="com.zyrenth.gts.gui.MyApplet"
+         width="600"
+         height="350">
+     </applet-desc>
+     <security>
+     	<all-permissions />
+     </security>
+     <update check="background"/>
+</jnlp>  

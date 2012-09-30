@@ -26,4 +26,11 @@ public interface DnsEventListener
 	 */
 	void onValidityCheck(InetAddress address);
 	
+	/**
+	 * Occurs whenever the server encounters an error while running. The most
+	 * common error is a <code>BindException</code> that occurs during startup.
+	 * @param e The Exception that occurred
+	 */
+	public void onServerError(Exception e);
+	
 }

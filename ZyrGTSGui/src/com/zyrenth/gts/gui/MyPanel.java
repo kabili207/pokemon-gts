@@ -169,6 +169,10 @@ public class MyPanel extends JPanel
 								label.setText("Listening on " + address.getHostAddress());
 								lblDnsIcon.setIcon(createImageIcon("/images/icons/ledgreen.png", "DNS server has started"));
 							}
+							if (e.getStatus() == ServerStatusEvent.Status.Stopped){
+								label.setText("DNS Server not running");
+								lblDnsIcon.setIcon(createImageIcon("/images/icons/ledred.png", "DNS server has stopped"));
+							}
 							
 						}
 
@@ -176,6 +180,13 @@ public class MyPanel extends JPanel
 						public void onValidityCheck(InetAddress address) {
 							// TODO Auto-generated method stub
 							
+						}
+
+						@Override
+						public void onServerError(Exception e) {
+							// TODO Auto-generated method stub
+							System.out.println("Exception on DNS Server: " + e);
+							e.printStackTrace();
 						}
 						
 					});
@@ -230,12 +241,13 @@ public class MyPanel extends JPanel
 						{
 							if (e.getStatus() == ServerStatusEvent.Status.Starting)
 							{
-								//System.out.println("Starting DNS Server");
 								lblWebIcon.setIcon(createImageIcon("/images/icons/ledyellow.png", "Web server is starting"));
 							}
-							if (e.getStatus() == ServerStatusEvent.Status.Started){
-								//label.setText("Listening on " + address.getHostAddress());
+							else if (e.getStatus() == ServerStatusEvent.Status.Started){
 								lblWebIcon.setIcon(createImageIcon("/images/icons/ledgreen.png", "Web server has started"));
+							}
+							else if (e.getStatus() == ServerStatusEvent.Status.Stopped){
+								lblWebIcon.setIcon(createImageIcon("/images/icons/ledred.png", "Web server has stopped"));
 							}
 							
 						}
@@ -247,6 +259,13 @@ public class MyPanel extends JPanel
 							imgPokemon.setIcon(createImageIcon(natID, null));
 							label.setText("Sent " + e.getPokemon().getNickname() + " to " + e.getPid());
 							
+						}
+
+						@Override
+						public void onServerError(Exception e) {
+							// TODO Auto-generated method stub
+							System.out.println("Exception on Web Server: " + e);
+							e.printStackTrace();
 						}
 					});
 				}

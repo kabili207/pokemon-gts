@@ -19,9 +19,9 @@ public class ConsoleGTS
 	private static Thread dnsThread;
 	public static void main(String[] args)
 	{
-		System.out.println(Helper.getAppDataDirectory());
-		if(1 > 0)
-		return;
+		//System.out.println(Helper.getAppDataDirectory());
+		//if(1 > 0)
+		//return;
 		
 		dnsServer = new DnsServer();
 		dnsServer.addEventListener(new DnsEventListener()
@@ -46,6 +46,14 @@ public class ConsoleGTS
 			public void onValidityCheck(InetAddress address) {
 				// TODO Auto-generated method stub
 				System.out.println("WARNING: " + address.getHostAddress() + " is checking Nintendo's server to see if pokemon is valid!");
+			}
+
+			@Override
+			public void onServerError(Exception e) {
+				// TODO Auto-generated method stub
+				System.out.println("Server encountered an error: " + e);
+				e.printStackTrace();
+				
 			}
 			
 		});
@@ -90,6 +98,14 @@ public class ConsoleGTS
 					//label.setText("Listening on " + address.getHostAddress());
 					System.out.println("Web server has started");
 				}
+			}
+
+			@Override
+			public void onServerError(Exception e) {
+				// TODO Auto-generated method stub
+				System.out.println("Server encountered an error: " + e);
+				e.printStackTrace();
+				
 			}
 		});
 		server.run();

@@ -107,8 +107,9 @@ public class DnsServer implements Runnable
 		}
 		catch (IOException ioe)
 		{
-			System.out.println("IOException on socket listen: " + ioe);
-			ioe.printStackTrace();
+			//System.out.println("IOException on socket listen: " + ioe);
+			//ioe.printStackTrace();
+			fireServerErrorEvent(ioe);
 		}
 		finally
 		{
@@ -157,6 +158,19 @@ public class DnsServer implements Runnable
 		while (i.hasNext())
 		{
 			i.next().onValidityCheck(address);
+		}
+	}
+	
+	/**
+	 * Fires a status changed event to any listeners registered.
+	 * @param status the server's new status
+	 */
+	private synchronized void fireServerErrorEvent(Exception e)
+	{
+		Iterator<DnsEventListener> i = _listeners.iterator();
+		while (i.hasNext())
+		{
+			i.next().onServerError(e);
 		}
 	}
 	
