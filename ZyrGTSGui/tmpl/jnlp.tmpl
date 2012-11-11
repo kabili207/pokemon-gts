@@ -3,19 +3,26 @@
     <information>
         <title>Zyrenth GTS GUI</title>
         <vendor>Andrew Nagle</vendor>
+        <homepage href="docs/help.html"/>
+	    <description>Zyrenth GTS Application</description>
+	    <description kind="short">A small application that poses as
+	    a Global Trade Station server for the generation V Pokemon games.</description>
+	    <icon href="images/swingset2.jpg"/>
+	    <icon kind="splash" href="images/splash.gif"/>
+	    <offline-allowed/>
     </information>
     <resources>
         <!-- Application Resources -->
         <j2se version="1.6+"
             href="http://java.sun.com/products/autodl/j2se" />
-        <jar href="zyr-gts-gui.jar" main="true" />
+        <jar href="@jarName@" main="true" />
 
     </resources>
     <applet-desc 
          name="Zyrenth GTS GUI"
-         main-class="com.zyrenth.gts.gui.MyApplet"
-         width="600"
-         height="350">
+         main-class="@className@"
+         width="@width@"
+         height="@height@">
      </applet-desc>
      <security>
      	<all-permissions />

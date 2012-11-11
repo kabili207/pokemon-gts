@@ -14,165 +14,150 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * The DNS server required by the GTS in order to intercept requests to 
- * Nintendo's servers and redirect them to a WebServer. This server needs
- * to run on port 53 which may require administrative privileges.
+ * The DNS server required by the GTS in order to intercept requests to
+ * Nintendo's servers and redirect them to a WebServer. This server needs to run
+ * on port 53 which may require administrative privileges.
  * 
  * @author kabili
  */
-public class DnsServer implements Runnable
-{
+public class DnsServer implements Runnable {
 
 	private static final int PORT = 53;
 	private static final int MAX_CONNECTIONS = 0;
-		
+
 	// Listen for incoming connections and handle them
-	public void run()
-	{
+	public void run() {
 		int i = 0;
-		//System.out.println("Starting DNS Server");
+		// System.out.println("Starting DNS Server");
 		fireStatusChangedEvent(ServerStatusEvent.Status.Starting, null);
-		try
-		{
-			//DatagramSocket dnsSock;
+		try {
+			// DatagramSocket dnsSock;
 			InetAddress googleDns = InetAddress.getByName("8.8.8.8");
 			InetAddress localAddr = null;
-			
+
 			Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
-			for (NetworkInterface netint : Collections.list(nets))
-			{
+			for (NetworkInterface netint : Collections.list(nets)) {
 				Enumeration<InetAddress> inetAddresses = netint.getInetAddresses();
 				for (InetAddress inetAddress : Collections.list(inetAddresses)) {
-					if(!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address)
+					if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address)
 						localAddr = inetAddress;
 				}
 			}
 
-			
 			DatagramSocket listener = new DatagramSocket(PORT);
 			listener.setReuseAddress(true);
-			
+
 			// TODO: Send event on DNS start
-			//System.out.println("DNS Listening on: " + localAddr.getHostAddress());
+			// System.out.println("DNS Listening on: " +
+			// localAddr.getHostAddress());
 			fireStatusChangedEvent(ServerStatusEvent.Status.Started, localAddr);
-			while ((i++ < MAX_CONNECTIONS) || (MAX_CONNECTIONS == 0))
-			{
+			while ((i++ < MAX_CONNECTIONS) || (MAX_CONNECTIONS == 0)) {
 				byte[] buffer = new byte[512];
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-				
-				
+
 				byte[] buffer2 = new byte[512];
 				DatagramPacket packet2 = new DatagramPacket(buffer2, buffer2.length);
-				
+
 				listener.receive(packet);
-				
-				//System.out.println(packet.getAddress().getHostAddress());
+
+				// System.out.println(packet.getAddress().getHostAddress());
 				byte[] r = packet.getData();
-				
-				
+
 				DatagramSocket datagramSocket = new DatagramSocket();
 				DatagramPacket realDns = new DatagramPacket(r, r.length, googleDns, PORT);
-				
+
 				datagramSocket.send(realDns);
 				datagramSocket.receive(packet2);
-				
+
 				byte[] rr = Arrays.copyOfRange(buffer2, 0, packet2.getLength());
-				
+
 				String resp = new String(rr);
 
-				if(resp.contains("pkvldtprod"))
-				{
+				if (resp.contains("pkvldtprod")) {
 					// Requested domain is https://pkvldtprod.nintendo.co.jp/
 					// DS is attempting to verifying the validity of a pokemon.
 					// TODO: Send an event
 					fireValidityCheckEvent(packet.getAddress());
 				}
-				
-				if(resp.contains("gamestats2"))
-				{
-					
+
+				if (resp.contains("gamestats2")) {
+
 					byte[] addrByte = localAddr.getAddress();
-					//byte[] addrByte = InetAddress.getByName("192.168.1.50").getAddress();
-					rr[rr.length -4] = addrByte[0];
-					rr[rr.length -3] = addrByte[1];
-					rr[rr.length -2] = addrByte[2];
-					rr[rr.length -1] = addrByte[3];
+					// byte[] addrByte =
+					// InetAddress.getByName("192.168.1.50").getAddress();
+					rr[rr.length - 4] = addrByte[0];
+					rr[rr.length - 3] = addrByte[1];
+					rr[rr.length - 2] = addrByte[2];
+					rr[rr.length - 1] = addrByte[3];
 				}
-				
+
 				DatagramPacket response = new DatagramPacket(rr, rr.length, packet.getAddress(), packet.getPort());
 				listener.send(response);
-				
+
 			}
-			
-		}
-		catch (IOException ioe)
-		{
-			//System.out.println("IOException on socket listen: " + ioe);
-			//ioe.printStackTrace();
+
+		} catch (IOException ioe) {
+			// System.out.println("IOException on socket listen: " + ioe);
+			// ioe.printStackTrace();
 			fireServerErrorEvent(ioe);
-		}
-		finally
-		{
+		} finally {
 			fireStatusChangedEvent(ServerStatusEvent.Status.Stopped, null);
 		}
 
 	}
-	
+
 	private List<DnsEventListener> _listeners = new ArrayList<DnsEventListener>();
 
 	/**
 	 * Adds a DnsEventListener to the DNS server.
-	 * @param listener the DnsEventListener to be added
+	 * 
+	 * @param listener
+	 *            the DnsEventListener to be added
 	 */
-	public synchronized void addEventListener(DnsEventListener listener)
-	{
+	public synchronized void addEventListener(DnsEventListener listener) {
 		_listeners.add(listener);
 	}
-	
+
 	/**
 	 * Removes a DnsEventListener from the DNS server.
-	 * @param listener the DnsEventListener to be removed
+	 * 
+	 * @param listener
+	 *            the DnsEventListener to be removed
 	 */
-	public synchronized void removeEventListener(DnsEventListener listener)
-	{
+	public synchronized void removeEventListener(DnsEventListener listener) {
 		_listeners.remove(listener);
 	}
-	
+
 	// call this method whenever you want to notify
 	// the event listeners of the particular event
-	private synchronized void fireStatusChangedEvent(ServerStatusEvent.Status status, InetAddress address)
-	{
+	private synchronized void fireStatusChangedEvent(ServerStatusEvent.Status status, InetAddress address) {
 		ServerStatusEvent event = new ServerStatusEvent(this, status);
 		Iterator<DnsEventListener> i = _listeners.iterator();
-		while (i.hasNext())
-		{
+		while (i.hasNext()) {
 			i.next().onServerStatusChanged(event, address);
 		}
 	}
-	
+
 	// call this method whenever you want to notify
 	// the event listeners of the particular event
-	private synchronized void fireValidityCheckEvent(InetAddress address)
-	{
+	private synchronized void fireValidityCheckEvent(InetAddress address) {
 		Iterator<DnsEventListener> i = _listeners.iterator();
-		while (i.hasNext())
-		{
+		while (i.hasNext()) {
 			i.next().onValidityCheck(address);
 		}
 	}
-	
+
 	/**
 	 * Fires a status changed event to any listeners registered.
-	 * @param status the server's new status
+	 * 
+	 * @param status
+	 *            the server's new status
 	 */
-	private synchronized void fireServerErrorEvent(Exception e)
-	{
+	private synchronized void fireServerErrorEvent(Exception e) {
 		Iterator<DnsEventListener> i = _listeners.iterator();
-		while (i.hasNext())
-		{
+		while (i.hasNext()) {
 			i.next().onServerError(e);
 		}
 	}
-	
-	
+
 }

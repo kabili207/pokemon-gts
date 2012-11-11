@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<project default="create_run_jar" name="Create Runnable Jar for Project ZyrGTSGui">
+    
+	<property name="bin.name" value="zyr-gts-gui" />
+	<property name="jar.name" value="${bin.name}.jar" />
+	<property name="tmpl.dir" location="tmpl" />
+	<property name="out.dir" location="bin" />
+	<property name="width" value="600" />
+	<property name="height" value="350" />
+	<property name="class.name" value="com.zyrenth.gts.gui.MyApplet" />
+	
+	<target name="templates" description="Build template files">
+	    
+	    <copy file="${tmpl.dir}/jnlp.tmpl" tofile="${out.dir}/${bin.name}.jnlp" overwrite="true">
+	        <filterchain>
+	            <striplinecomments>
+	                <comment value="!" />
+	            </striplinecomments>
+	            <replacetokens>
+	                <token key="jarName" value="${jar.name}" />
+	                <token key="width" value="${width}" />
+	                <token key="height" value="${height}" />
+	                <token key="className" value="${class.name}" />
+	            </replacetokens>
+	        </filterchain>
+	    </copy>
+	    
+	    <copy file="${tmpl.dir}/page.html_tmpl" tofile="${out.dir}/${bin.name}.html" overwrite="true">
+	        <filterchain>
+	            <striplinecomments>
+	                <comment value="!" />
+	            </striplinecomments>
+	            <replacetokens>
+	                <token key="jnlpFile" value="${bin.name}.jnlp" />
+	                <token key="width" value="${width}" />
+	                <token key="height" value="${height}" />
+	                <token key="className" value="${class.name}" />
+	            </replacetokens>
+	        </filterchain>
+	    </copy>
+	    
+	</target>
+	
+    <target name="create_run_jar" description="Create JAR file">
+        <jar destfile="${out.dir}/${jar.name}" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="com.zyrenth.gts.gui.MyFrame"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="${out.dir}" excludes="${jar.name}, ${bin.name}.html, ${bin.name}.jnlp" />
+            <fileset dir="../ZyrGTS/bin"/>
+            <zipfileset excludes="META-INF/*.SF" src="../ZyrGTS/lib/commons-codec-1.6.jar"/>
+        </jar>
+        <signjar jar="${out.dir}/${jar.name}" alias="kabili" storepass="keypass" keypass="privkeypass" />
+    </target>
+</project>

@@ -2,9 +2,8 @@ package com.zyrenth.gts;
 
 import java.util.EventObject;
 
-public class PokemonReceivedEvent extends EventObject
-{
-	
+public class PokemonReceivedEvent extends EventObject {
+
 	/**
 	 * 
 	 */
@@ -13,8 +12,7 @@ public class PokemonReceivedEvent extends EventObject
 	private String pid;
 	private Trainer trainer;
 
-	public PokemonReceivedEvent(Object source, Pokemon pkm, Trainer t, String pid)
-	{
+	public PokemonReceivedEvent(Object source, Pokemon pkm, Trainer t, String pid) {
 		super(source);
 		this.pokemon = pkm;
 		this.pid = pid;
@@ -22,19 +20,16 @@ public class PokemonReceivedEvent extends EventObject
 		// TODO Auto-generated constructor stub
 	}
 
-	public Pokemon getPokemon()
-	{
+	public Pokemon getPokemon() {
 		return pokemon;
 	}
 
-	public Trainer getTrainer()
-	{
+	public Trainer getTrainer() {
 		return trainer;
 	}
 
-	public String getPid()
-	{
+	public String getPid() {
 		return pid;
 	}
-	
+
 }
